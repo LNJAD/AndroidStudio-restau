@@ -1,7 +1,10 @@
 package fr.isen.AdrienMARTIN.androiderestaurant
 
+import android.app.VoiceInteractor
+import android.content.ContentValues.TAG
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -24,63 +27,139 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.privacysandbox.tools.core.model.Method
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import fr.isen.AdrienMARTIN.androiderestaurant.model.Data
+import fr.isen.AdrienMARTIN.androiderestaurant.model.DisheClass
+import fr.isen.AdrienMARTIN.androiderestaurant.model.Ingredients
+import fr.isen.AdrienMARTIN.androiderestaurant.model.Items
+import fr.isen.AdrienMARTIN.androiderestaurant.model.Prices
 import fr.isen.AdrienMARTIN.androiderestaurant.ui.theme.AndroidERestaurantTheme
+import org.json.JSONObject
 
 class DishesActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-//            AndroidERestaurantTheme {
-//                // A surface container using the 'background' color from the theme
-//                Surface(
-//                    modifier = Modifier.fillMaxSize(),
-//                    color = MaterialTheme.colorScheme.background
-//                ) {
-//                    val nom = intent.getStringExtra("NOM")
-//                    val nomV2= nom ?: "Entrees"
-//                    EntreesScreen(nomV2)
-//                }
-//            }
-            val nom = intent.getStringExtra("NOM") ?: "error"
-            val dishList = mutableListOf<Dish>()
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            titleContentColor = MaterialTheme.colorScheme.primary,
-                        ),
 
-                        title = {
-                            Text(
+            val nomTypePlat = intent.getStringExtra("NOM") ?: "error";
+            val itemJsonList = ArrayList<Items>()
 
-                                text = "$nom",
-                                fontSize = 20.sp,
-                                fontStyle = FontStyle.Italic,
+            val apiUrl = "http://test.api.catering.bluecodegames.com/menu"
+            val jsonRequest = JSONObject()
+            jsonRequest.put("id_shop", "1")
 
-                                modifier = Modifier
-                            )
 
-                        }
-                    )
+            val queue: RequestQueue = Volley.newRequestQueue(applicationContext)
+
+
+
+
+            // Fetch dishes from server
+            val url = "http://test.api.catering.bluecodegames.com/menu"
+            val requestBody = JSONObject().apply {
+                put("id_shop", "1")
+            }.toString()
+
+            val stringRequest = object : StringRequest(
+                Request.Method.POST, url,
+                Response.Listener<String> { response ->
+                    handleResponse(response)
                 },
+                Response.ErrorListener { error ->
+                    Log.e("DISHES", "Error: ${error.toString()}")
+                }
             ) {
+                override fun getBody(): ByteArray = requestBody.toByteArray()
+                override fun getBodyContentType(): String = "application/json; charset=utf-8"
+            }
+            queue.add(stringRequest)
 
-                    innerPadding ->
-                Column (
-                    modifier = Modifier.padding(innerPadding)
-                ) {
+
+
+
+
+//            val jsonObjectRequest = JsonObjectRequest(
+//                Request.Method.POST, apiUrl, jsonRequest,
+//                { response ->
+//                    // Traitement de la réponse JSON
+//                    // Ici, vous pouvez extraire les données et les utiliser comme nécessaire
+//                      val data = response.getJSONArray("data")
+//                    Log.d("jsonRequest", "DATAAA $data")
+//
+//                    // on recupere le nomfr de chaque data et on le met dans un array
+//                    for (i in 0 until data.length()) {
+//                        val nomFr = data.getJSONObject(i).getString("name_fr")
+//                        if (nomFr == nomTypePlat) {
+//                            Log.d("jsonRequest", " $nomFr == $nomTypePlat")
+//                            val items = data.getJSONObject(i).getJSONArray("items")
+//
+//
+//
+//
+//                        }else {
+////                            Log.d("jsonRequest", " ERROR TF ?!$nomFr != $nomTypePlat")
+//                        }
+//
+//                        Log.d("jsonRequest", "nomFr $nomFr")
+//                    }
+////                    val nomFr = data.getJSONObject(i).getString("name_fr")
+//
+//                },
+//                { error ->
+//                    Log.d("jsonRequest", "error json response")
+//                })
+//            queue.add(jsonObjectRequest)
+//            Log.d("DATA JSON", "data //: $queue ")
+
+
+
+
+
+                    Scaffold(
+                        topBar = {
+                            TopAppBar(
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    titleContentColor = MaterialTheme.colorScheme.primary,
+                                ),
+
+                                title = {
+                                    Text(
+                                        text = "$nomTypePlat",
+                                        fontSize = 20.sp,
+                                        fontStyle = FontStyle.Italic,
+
+                                        modifier = Modifier
+                                    )
+
+                                }
+                            )
+                        },
+                    ) {
+
+                            innerPadding ->
+                        Column (
+                            modifier = Modifier.padding(innerPadding)
+                        ) {
 //                    val nom = intent.getStringExtra("NOM")
 //                    val nomV2= nom ?: "Entrees"
 
-                    val dishesArray = resources.getStringArray(R.array.dishes)
-                    val dishesList = dishesArray.map { Dish(it) }
+                            val dishesArray = resources.getStringArray(R.array.dishes)
+                            val dishesList = dishesArray.map { Dish(it) }
 
-                    dishesList.forEach {
-                        listDish(it){
-                            startActivity(it)
-                        }
+                            dishesList.forEach {
+                                listDish(it){
+                                    startActivity(it)
+                                }
 //                        Text(
 //                            text = it.name,
 //                            modifier = Modifier.padding(16.dp).clickable {
@@ -90,17 +169,17 @@ class DishesActivity : ComponentActivity() {
 //                            )
 
 
+                            }
+                        }
+
+
                     }
+
+
+
+
                 }
-
-
-            }
-
-
-
-
         }
-    }
 
 
     fun startActivity(dish :String){
@@ -111,6 +190,12 @@ class DishesActivity : ComponentActivity() {
         startActivity(intent)
     }
 
+    fun handleResponse (response: String ){
+        val menuResponse = Gson().fromJson(response, DisheClass::class.java)
+        val category = menuResponse.data.find { it.nameFr== "Entrées" }
+        Log.d("GSON", "handleResponse: $category ")
+//        val category = menuResponse.data.find { it.name_fr == buttonText }
+    }
 
 }
 data class Dish(val name: String)
@@ -119,7 +204,9 @@ data class Dish(val name: String)
 fun listDish(dish: Dish, startActivity: (String) -> Unit){
     Column (
 
-        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
     ){
