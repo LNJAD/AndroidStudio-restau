@@ -10,21 +10,37 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import fr.isen.AdrienMARTIN.androiderestaurant.model.Items
 import fr.isen.AdrienMARTIN.androiderestaurant.ui.theme.AndroidERestaurantTheme
 
 class DetailsActivity : ComponentActivity() {
+
+    val mutalbleDataList = mutableListOf<Items>()
+    val receivedList: List<Items>? = intent.getSerializableExtra("DISH") as? List<Items>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
+
+//            val nom = intent.getStringExtra("DISH")?: "ERROR"
+
+
+
+
+
+
             AndroidERestaurantTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val nom = intent.getStringExtra("NOM")?: "Entrees"
 
-                    Text(text = "Details $nom")
+
+//                    Text(text = "Details $nom")
+
+
                 }
             }
         }
