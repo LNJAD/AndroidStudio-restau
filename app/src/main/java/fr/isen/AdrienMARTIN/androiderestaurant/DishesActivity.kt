@@ -12,6 +12,7 @@ import androidx.annotation.Nullable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -114,16 +115,9 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
                         val categoryChoisi = menuResponse.data.find { it.nameFr== nomTypePlat}
 
                         val items = categoryChoisi?.items
-                        val trueImages = mutableListOf<String>()
-//                        if (isImageValid(items?.get(0)?.images?.get(0) ?: "",this)){
-//
-//                        }
 
 
-
-//                        Log.d("GSONimages", "IMAGES: $trueImages")
-
-                        val itemsList = items?.map { Items(it.id, it.nameFr, it.nameEn, it.idCategory, it.categNameFr, it.categNameEn, it.images, it.ingredients, it.prices) }
+                        val itemsList = items?.map { Items(it.id, it.nameFr, it.idCategory, it.categNameFr, it.images, it.ingredients, it.prices) }
                         this@DishesActivity.mutableDataList = itemsList ?: emptyList()
 //
                     Log.d("GSON", "test outside: $mutableDataList")
@@ -155,7 +149,7 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
                         //CategoryScreen(dataCategory, navigateToDetails = { dish ->
                         //                                navigateToDetailsScreen(dish)
                         //                            })
-                        scaffold(this@DishesActivity.mutableDataList,nomTypePlat)
+                        scaffold(this@DishesActivity.mutableDataList,nomTypePlat, startActivity = {dish -> startActivity(dish)})
 
 
                     }
@@ -187,7 +181,7 @@ data class Dish(val name: String)
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun listDish(dish: Items){
+fun listDish(dish: Items, startActivity: (Items) -> Unit){
     Column (
 
         modifier = Modifier
@@ -203,49 +197,59 @@ fun listDish(dish: Items){
 //            model = dish.images[0],
 //            contentDescription = null,
 //        )
-
-        val painter = rememberImagePainter(
-            data = dish.images.firstOrNull(),
-            builder = {
-                crossfade(true)
-                fallback(R.drawable.foodplaceholder)
-                dish.images.drop(1).forEach {
-                    if (it.isNotEmpty()) {
-                        data(it)
-                        return@forEach
-                    }
-                }
-                error(R.drawable.foodplaceholder)
-            }
-        )
-        Image(
-            painter = painter,
-            contentDescription = "Dish Image",
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            contentScale = ContentScale.Crop
-        )
-
-        Text(
-            text = dish.nameFr ?: "error",
-            fontSize = 20.sp,
-            color = Color(0xFFFFA500),
-
-            modifier = Modifier
-                .padding(16.dp)
                 .clickable {
-//                    startActivity(dish.name)
+                    startActivity(dish)
                 }
-        )
-        Text(
-            text = dish.prices.first().price + " " + "€",
-            fontSize = 20.sp,
-            color = Color(0xFFFFA500),
-            modifier = Modifier
-                .padding(16.dp)
+
+        ){
+            Column {
+
+
+                val painter = rememberImagePainter(
+                    data = dish.images.firstOrNull(),
+                    builder = {
+                        crossfade(true)
+                        fallback(R.drawable.foodplaceholder)
+                        dish.images.drop(1).forEach {
+                            if (it.isNotEmpty()) {
+                                data(it)
+                                return@forEach
+                            }
+                        }
+                        error(R.drawable.foodplaceholder)
+                    }
+                )
+                Image(
+                    painter = painter,
+                    contentDescription = "Dish Image",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                Text(
+                    text = dish.nameFr ?: "error",
+                    fontSize = 20.sp,
+                    color = Color(0xFFFFA500),
+
+                    modifier = Modifier
+                        .padding(16.dp)
+
+                )
+                Text(
+                    text = dish.prices.first().price + " " + "€",
+                    fontSize = 20.sp,
+                    color = Color(0xFFFFA500),
+                    modifier = Modifier
+                        .padding(16.dp)
 //                .clickable {
-        )
+                )
+            }
+        }
+
 
         Spacer(modifier = Modifier.size(10.dp))
     }
@@ -255,7 +259,7 @@ fun listDish(dish: Items){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun scaffold (dishes: List<Items>,nomTypePlat:String){
+fun scaffold (dishes: List<Items>,nomTypePlat:String, startActivity: (Items) -> Unit){
     Scaffold(
         topBar = {
             TopAppBar(
@@ -288,7 +292,7 @@ fun scaffold (dishes: List<Items>,nomTypePlat:String){
             LazyColumn {
 //                items(count = dishes.size) {
                 items(dishes) { dish ->
-                    listDish(dish)
+                    listDish(dish, startActivity= {dish -> startActivity(dish)})
 
 
 //                    listDish(Dish(dish.nameFr ?: "error"), startActivity)
