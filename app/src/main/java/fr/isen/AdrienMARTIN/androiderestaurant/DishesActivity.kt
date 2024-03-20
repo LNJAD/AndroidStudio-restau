@@ -1,20 +1,22 @@
 package fr.isen.AdrienMARTIN.androiderestaurant
 
-import android.app.VoiceInteractor
-import android.content.ContentValues.TAG
+import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.Nullable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,37 +30,46 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.privacysandbox.tools.core.model.Method
+import coil.Coil
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import coil.imageLoader
+import coil.request.ErrorResult
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.RequestOptions
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import fr.isen.AdrienMARTIN.androiderestaurant.model.Data
+import com.squareup.picasso.Picasso
 import fr.isen.AdrienMARTIN.androiderestaurant.model.DisheClass
-import fr.isen.AdrienMARTIN.androiderestaurant.model.Ingredients
 import fr.isen.AdrienMARTIN.androiderestaurant.model.Items
-import fr.isen.AdrienMARTIN.androiderestaurant.model.Prices
 import fr.isen.AdrienMARTIN.androiderestaurant.ui.theme.AndroidERestaurantTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.json.JSONObject
-import kotlin.math.log
+import javax.sql.DataSource
+
 
 class DishesActivity : ComponentActivity() {
 //val dataList = ArrayList<Items>()
@@ -98,10 +109,20 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
                 { response ->
                     try {
 //                        handleResponse(response,nomTypePlat)
+                        //TODO mettre cette merde en fonction
                         val menuResponse = Gson().fromJson(response, DisheClass::class.java)
                         val categoryChoisi = menuResponse.data.find { it.nameFr== nomTypePlat}
 
                         val items = categoryChoisi?.items
+                        val trueImages = mutableListOf<String>()
+//                        if (isImageValid(items?.get(0)?.images?.get(0) ?: "",this)){
+//
+//                        }
+
+
+
+//                        Log.d("GSONimages", "IMAGES: $trueImages")
+
                         val itemsList = items?.map { Items(it.id, it.nameFr, it.nameEn, it.idCategory, it.categNameFr, it.categNameEn, it.images, it.ingredients, it.prices) }
                         this@DishesActivity.mutableDataList = itemsList ?: emptyList()
 //
@@ -150,7 +171,7 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
     }
 
 
-    fun startActivity(dish :String){
+    fun startActivity(dish :Items){
 
         val intent = Intent(this, DetailsActivity::class.java).apply {
             putExtra("DISH", dish)
@@ -158,54 +179,7 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
         startActivity(intent)
     }
 
-//    fun handleResponse (response: String , nomTypePlat: String){
-//        val menuResponse = Gson().fromJson(response, DisheClass::class.java)
-//        val category = menuResponse.data.find { it.nameFr== nomTypePlat}
-//
-//            val nameList = category?.items?.map { it.nameFr }
-//            val imageList = category?.items?.map { it.images }
-//
-//
-//        val nameFromCategory = category?.items?.map { it.nameFr to it.images }
-//
-////        Log.d("GSON", "handleResponse: all of 1 cat $category ")
-////        Log.d("GSON", "handleResponse name + images: $nameFromCategory ")
-////        Log.d("GSON", "handleResponse: $imageList ")
-//
-//        // on met ca dans une dataclass  Items
-//        val items = category?.items
-//        val itemsList = items?.map { Items(it.id, it.nameFr, it.nameEn, it.idCategory, it.categNameFr, it.categNameEn, it.images, it.ingredients, it.prices) }
-//
-//       // complete la dataclass DisheClass
-//
-//        val disheClass = DisheClass(menuResponse.data.map { Data(it.nameFr,  itemsList as List<Items>) })
-//
-//
-//
-//        Log.d("GSON", "test_dataclass:  $disheClass")
-//
-//        dataList.add(Data(nomTypePlat, itemsList as List<Items>))
-//
-//
-//
-//    }
 
-//    private fun fetchData( category : String, items:MutableList<Items>){
-//        val jsonRequest = JSONObject()
-//        jsonRequest.put("id_shop", "1")
-//        val jsonObjectRequest = JsonObjectRequest(
-//            Request.Method.POST, "http://test.api.catering.bluecodegames.com/menu", jsonRequest,
-//            { response ->
-//                    val result = Gson.fromJson(response.toString(), DisheClass::class.java)
-//
-//            },
-//            { error ->
-//                Log.d(TAG, "fetchData: $error")
-//            }
-//        )
-//    }
-
-}
 data class Dish(val name: String)
 
 
@@ -223,18 +197,34 @@ fun listDish(dish: Items){
                         horizontalAlignment = Alignment.CenterHorizontally
     ){
 
-//        Image(
-////            painter = dish.images[0].let { painterResource(id = it.toInt()) },
-//            painter= rememberImagePainter(data = dish.images[0]),
-//            contentDescription = "Image",
-//
-//            modifier = Modifier.size(100.dp)
-//        )
-        AsyncImage(
 
-//            model = "https://i.pinimg.com/originals/1b/23/07/1b230783cb0d380a4586f386c4cd7e29.jpg",
-            model = dish.images[0],
-            contentDescription = null,
+//        AsyncImage(
+//
+//            model = dish.images[0],
+//            contentDescription = null,
+//        )
+
+        val painter = rememberImagePainter(
+            data = dish.images.firstOrNull(),
+            builder = {
+                crossfade(true)
+                fallback(R.drawable.foodplaceholder)
+                dish.images.drop(1).forEach {
+                    if (it.isNotEmpty()) {
+                        data(it)
+                        return@forEach
+                    }
+                }
+                error(R.drawable.foodplaceholder)
+            }
+        )
+        Image(
+            painter = painter,
+            contentDescription = "Dish Image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            contentScale = ContentScale.Crop
         )
 
         Text(
@@ -247,6 +237,14 @@ fun listDish(dish: Items){
                 .clickable {
 //                    startActivity(dish.name)
                 }
+        )
+        Text(
+            text = dish.prices.first().price + " " + "€",
+            fontSize = 20.sp,
+            color = Color(0xFFFFA500),
+            modifier = Modifier
+                .padding(16.dp)
+//                .clickable {
         )
 
         Spacer(modifier = Modifier.size(10.dp))
@@ -303,4 +301,5 @@ fun scaffold (dishes: List<Items>,nomTypePlat:String){
 
 
     }
+}
 }

@@ -1,6 +1,7 @@
 package fr.isen.AdrienMARTIN.androiderestaurant.model
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 
 data class Items (
@@ -15,4 +16,4 @@ data class Items (
   @SerializedName("ingredients"   ) var ingredients : ArrayList<Ingredients> = arrayListOf(),
   @SerializedName("prices"        ) var prices      : ArrayList<Prices>      = arrayListOf()
 
-)
+): Serializable
