@@ -170,13 +170,24 @@ fun carroussel (dish: Items){
         val pagerState = rememberPagerState(pageCount = { dish.images.size })
         val painter = rememberImagePainter(
             data = dish.images.firstOrNull(),
+//            builder = {
+//                crossfade(true)
+//                fallback(R.drawable.foodplaceholder)
+//                dish.images.drop(1).forEach {
+//                    if (it.isNotEmpty()) {
+//                        data(it)
+//                        return@forEach
+//                    }
+//                }
+//                error(R.drawable.foodplaceholder)
+//            }
             builder = {
                 crossfade(true)
                 fallback(R.drawable.foodplaceholder)
-                dish.images.drop(1).forEach {
-                    if (it.isNotEmpty()) {
-                        data(it)
-                        return@forEach
+                for (image in dish.images.drop(1)) {
+                    if (image.isNotEmpty()) {
+                        data(image)
+                        break
                     }
                 }
                 error(R.drawable.foodplaceholder)
