@@ -43,7 +43,6 @@ import androidx.core.content.ContextCompat.startActivity
 import fr.isen.AdrienMARTIN.androiderestaurant.ui.theme.AndroidERestaurantTheme
 
 
-
 // code logique: celui qui est du "vrai code"
 
 class HomeActivity : ComponentActivity() {
@@ -104,8 +103,8 @@ class HomeActivity : ComponentActivity() {
             ) {
 
                 ScrollContent(
-                    showToast = {text -> showToast(text)},
-                    startActivity = {nom -> startActivity(nom)},
+                    showToast = { text -> showToast(text) },
+                    startActivity = { nom -> startActivity(nom) },
                     innerPadding = it
 
                 )
@@ -114,11 +113,10 @@ class HomeActivity : ComponentActivity() {
             }
 
 
-
         }
     }
 
-    fun showToast (text:String){
+    fun showToast(text: String) {
         Toast.makeText(
             this,
             text,
@@ -126,13 +124,15 @@ class HomeActivity : ComponentActivity() {
         ).show()
 
     }
-    fun startActivity(nom :String){
+
+    fun startActivity(nom: String) {
 
         val intent = Intent(this, DishesActivity::class.java).apply {
             putExtra("NOM", nom)
         }
         startActivity(intent)
     }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.d("MainActivity", "L'activité a été détruite")
@@ -140,43 +140,44 @@ class HomeActivity : ComponentActivity() {
 }
 
 @Composable
-fun ScrollContent(innerPadding: PaddingValues, showToast: (String)-> Unit, startActivity: (String)-> Unit) {
+fun ScrollContent(
+    innerPadding: PaddingValues,
+    showToast: (String) -> Unit,
+    startActivity: (String) -> Unit
+) {
     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
 //                            .background(color = Color(0xFFFFA500))
-                            .padding(16.dp),
+            .padding(16.dp),
 //                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
 
-                    )
-                    {
-                        TopBar()
-                        bienvenu()
-                        menuBouton (
-                            showToast = {text -> showToast(text)},
-                            startActivity = {nom -> startActivity(nom)}
-                        )
+    )
+    {
+        TopBar()
+        bienvenu()
+        menuBouton(
+            showToast = { text -> showToast(text) },
+            startActivity = { nom -> startActivity(nom) }
+        )
 
-                    }
+    }
 }
 
 
-
-
-
 @Composable
-fun TopBar (){
+fun TopBar() {
 
-    Spacer(modifier =   Modifier.height(10.dp))
-    Column (
+    Spacer(modifier = Modifier.height(10.dp))
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(color = Color(0xFFFFA500))
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
 //        horizontalAlignment = Alignment.CenterHorizontally
-    ){
+    ) {
         Text(
             text = "DroidRestaurant",
             fontSize = 20.sp,
@@ -187,9 +188,9 @@ fun TopBar (){
 }
 
 @Composable
-fun bienvenu(){
+fun bienvenu() {
     // un text centrer sur 3 ligne avec une image a droite
-    Row (
+    Row(
         modifier = Modifier.fillMaxWidth(),
     )
     {
@@ -223,7 +224,7 @@ fun bienvenu(){
             );
         }
         Image(
-            painter =  painterResource(id = R.drawable.raccoon), // Replace R.drawable.your_image with the actual image resource
+            painter = painterResource(id = R.drawable.raccoon), // Replace R.drawable.your_image with the actual image resource
             contentDescription = "Image",
             modifier = Modifier.size(100.dp)
         )
@@ -233,21 +234,22 @@ fun bienvenu(){
 
 
 @Composable
-fun menuBouton (showToast: (String)-> Unit, startActivity: (String)-> Unit){
+fun menuBouton(showToast: (String) -> Unit, startActivity: (String) -> Unit) {
     // 3 bouton pour les 3 categories
 
 
-
-        Column (
-            verticalArrangement = Arrangement.Center,
+    Column(
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-        ){
+    ) {
 //
-            Text (
-                
-                text = "entrées",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(16.dp).clickable {
+        Text(
+
+            text = "entrées",
+            fontSize = 20.sp,
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable {
                     showToast("entrées")
                     // on lance l'activité des entrées
                     startActivity("Entrées")
@@ -255,36 +257,33 @@ fun menuBouton (showToast: (String)-> Unit, startActivity: (String)-> Unit){
 
                 }
 
-            )
-            Trait()
-            Text(
-                text="Plats",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(16.dp)
-                    .clickable{
-                        showToast("Plats")
-                        startActivity("Plats")
-                    }
-            )
-            Trait()
-            Text(
-                text="Desserts",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(16.dp)
-                    .clickable{
-                        showToast("Desserts")
-                        startActivity("Desserts")
-                    }
-            )
+        )
+        Trait()
+        Text(
+            text = "Plats",
+            fontSize = 20.sp,
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable {
+                    showToast("Plats")
+                    startActivity("Plats")
+                }
+        )
+        Trait()
+        Text(
+            text = "Desserts",
+            fontSize = 20.sp,
+            modifier = Modifier
+                .padding(16.dp)
+                .clickable {
+                    showToast("Desserts")
+                    startActivity("Desserts")
+                }
+        )
 
 
-        }
     }
-
-
-
-
-
+}
 
 
 @Composable
