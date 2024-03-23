@@ -1,5 +1,6 @@
 package fr.isen.AdrienMARTIN.androiderestaurant
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,7 +73,7 @@ class DetailsActivity : ComponentActivity() {
                     val total = price?.times(quantity.intValue)
 
 //
-                    scaffold(item, quantity, total)
+                    scaffold(item, quantity, total, context = this@DetailsActivity)
 
                 }
             }
@@ -86,7 +90,8 @@ class DetailsActivity : ComponentActivity() {
 fun scaffold(
     dish: Items,
     quantity: MutableState<Int>,
-    total: Float?
+    total: Float?,
+    context: Context
 ) {
     Scaffold(
         topBar = {
@@ -97,13 +102,65 @@ fun scaffold(
                 ),
 
                 title = {
-                    Text(
-                        text = dish.nameFr ?: "error",
-                        fontSize = 20.sp,
-                        fontStyle = FontStyle.Italic,
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
 
-                        modifier = Modifier
-                    )
+                        Text(
+                            text = "Raccoon café",
+                            fontSize = 20.sp,
+                            fontStyle = FontStyle.Italic,
+                        )
+                        Box {
+//                            Text(
+//                                text = "0",
+//                                fontSize = 20.sp,
+//                                fontStyle = FontStyle.Italic,
+//                                modifier = Modifier
+//                                    .padding(16.dp)
+//                                    .clickable(
+//                                        onClick = {
+//                                            val panier = loadPanier(context)
+//                                            Log.d(
+//                                                "FILE",
+//                                                "panier updated: ${panier.size} ${panier[0].items.nameFr} ${panier[0].count} ${panier[0].totalPrice}"
+//                                            )
+//                                        }
+//                                    )
+//                            )
+
+                            Image(
+                                painter = painterResource(id = R.drawable.cart),
+                                contentDescription = "raccoon",
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .size(50.dp)
+
+                            )
+                            val panier = loadPanier(context)
+                            if (panier.size > 0) {
+                                Box(modifier =Modifier
+                                    .background(color = Color(0xFFff4700), shape = CircleShape)
+                                    ,
+                                    contentAlignment = Alignment.TopStart,
+
+
+                                )
+                                {
+                                Text(
+                                    text = panier.size.toString(),
+                                    fontSize = 20.sp,
+                                    fontStyle = FontStyle.Italic,
+                                    modifier = Modifier
+                                        .padding(8.dp),
+                                    color = Color.White
+                                )
+                            }}
+                        }
+
+                    }
 
                 }
             )
@@ -137,7 +194,7 @@ fun scaffold(
                     }
                 )
 
-                priceBouton(total, dish, quantity.value)
+                priceBouton(total, dish, quantity.value, context)
             }
 
 
@@ -245,7 +302,7 @@ fun selector(quantity: Int, onQuantityChange: (Int) -> Unit) {
 
 
 @Composable
-fun priceBouton(total: Float?, item: Items, quantity: Int) {
+fun priceBouton(total: Float?, item: Items, quantity: Int, context: Context) {
     val snackbarVisibleState: MutableState<Boolean> = remember { mutableStateOf(false) }
 
 
@@ -269,8 +326,14 @@ fun priceBouton(total: Float?, item: Items, quantity: Int) {
                         // on veut aussi mettre une snackbar
                         snackbarVisibleState.value = true
 
-                        // a mettre les 3 en une fonction
-                        loadPanier()
+
+                        addPanier(item, quantity.toFloat(), total, context)
+
+                        val panier = loadPanier(context)
+                        Log.d(
+                            "FILE",
+                            "panier updated: ${panier.size} ${panier[0].items.nameFr} ${panier[0].count} ${panier[0].totalPrice}"
+                        )
 
 
                     }
@@ -311,37 +374,38 @@ fun priceBouton(total: Float?, item: Items, quantity: Int) {
 }
 
 
-fun addPanier(item: Items, count: Float?,total: Float?) {
+fun addPanier(item: Items, count: Float?, total: Float?, context: Context) {
 
-    val panier = loadPanier()
+    val panier = loadPanier(context)
 
-    val itemToAdd = PanierItem(item, count?.toInt() ?: 0, total?:0f)
+    val itemToAdd = PanierItem(item, count?.toInt() ?: 0, total ?: 0f)
     panier.add(itemToAdd)
     Log.d("FILE", "addPanier new panier:$panier ")
 
-    savePanier(panier)
+    savePanier(panier, context)
 
 
 }
 
-fun savePanier (panier: ArrayList<PanierItem>) {
+fun savePanier(panier: ArrayList<PanierItem>, context: Context) {
     Log.d("FILE", "savePanier panier: $panier")
 
     val gson = Gson()
     val json = gson.toJson(panier)
     Log.d("FILE", "savePanier json: $json")
     val filePath = "data.json"
-    val file = File(filePath)
+
+    val file = File(context.filesDir, filePath)
     file.writeText(json)
 
 }
 
-fun loadPanier(): ArrayList<PanierItem> {
+fun loadPanier(context: Context): ArrayList<PanierItem> {
 
     val filePath = "data.json"
     val gson = Gson()
-    val file = File(filePath)
-    if (!file.exists() || file.length()==0.toLong()) {
+    val file = File(context.filesDir, filePath)
+    if (!file.exists() || file.length() == 0.toLong()) {
         println("Le fichier $filePath n'existe pas.")
         return ArrayList<PanierItem>()
     }
