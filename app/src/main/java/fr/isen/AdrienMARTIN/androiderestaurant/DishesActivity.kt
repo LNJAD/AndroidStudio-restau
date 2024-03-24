@@ -73,10 +73,10 @@ import javax.sql.DataSource
 
 
 class DishesActivity : ComponentActivity() {
-//val dataList = ArrayList<Items>()
+    //val dataList = ArrayList<Items>()
 //var mutalbleDataList by remember { mutableStateOf(mutableStateListOf<Items>()) }
 //    val mutalbleDataList = mutableStateListOf<Items>()
-var mutableDataList by mutableStateOf(emptyList<Items>())
+    var mutableDataList by mutableStateOf(emptyList<Items>())
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,9 +88,7 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
             // nouvelle list de plats
 
 
-
             val apiUrl = "http://test.api.catering.bluecodegames.com/menu"
-
 
 
             val queue: RequestQueue = Volley.newRequestQueue(applicationContext)
@@ -112,17 +110,27 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
 //                        handleResponse(response,nomTypePlat)
                         //TODO mettre cette merde en fonction
                         val menuResponse = Gson().fromJson(response, DisheClass::class.java)
-                        val categoryChoisi = menuResponse.data.find { it.nameFr== nomTypePlat}
+                        val categoryChoisi = menuResponse.data.find { it.nameFr == nomTypePlat }
 
                         val items = categoryChoisi?.items
 
 
-                        val itemsList = items?.map { Items(it.id, it.nameFr, it.idCategory, it.categNameFr, it.images, it.ingredients, it.prices) }
+                        val itemsList = items?.map {
+                            Items(
+                                it.id,
+                                it.nameFr,
+                                it.idCategory,
+                                it.categNameFr,
+                                it.images,
+                                it.ingredients,
+                                it.prices
+                            )
+                        }
                         this@DishesActivity.mutableDataList = itemsList ?: emptyList()
 //
-                    Log.d("GSON", "test outside: $mutableDataList")
+                        Log.d("GSON", "test outside: $mutableDataList")
 
-                    }catch (e: Exception){
+                    } catch (e: Exception) {
                         Log.e("DISHES", "Error: ${e.toString()}")
 
                     }
@@ -140,39 +148,38 @@ var mutableDataList by mutableStateOf(emptyList<Items>())
             queue.add(stringRequest)
 
 
-               AndroidERestaurantTheme {
-                    // A surface container using the 'background' color from the theme
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        //CategoryScreen(dataCategory, navigateToDetails = { dish ->
-                        //                                navigateToDetailsScreen(dish)
-                        //                            })
-                        scaffold(this@DishesActivity.mutableDataList,nomTypePlat, startActivity = {dish -> startActivity(dish)})
+            AndroidERestaurantTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    //CategoryScreen(dataCategory, navigateToDetails = { dish ->
+                    //                                navigateToDetailsScreen(dish)
+                    //                            })
+                    scaffold(
+                        this@DishesActivity.mutableDataList,
+                        nomTypePlat,
+                        startActivity = { dish -> startActivity(dish) })
 
 
-                    }
                 }
-
-
-
-
-
+            }
 
 
         }
     }
 
 
-    fun startActivity(dish :Items){
+    fun startActivity(dish: Items) {
 
         val intent = Intent(this, DetailsActivity::class.java).apply {
             putExtra("DISH", dish)
         }
         startActivity(intent)
     }
-
+}
+//TODO! si ca deconne cette partie c'est ici que ca se passe
 
 data class Dish(val name: String)
 
@@ -305,5 +312,4 @@ fun scaffold (dishes: List<Items>,nomTypePlat:String, startActivity: (Items) -> 
 
 
     }
-}
 }

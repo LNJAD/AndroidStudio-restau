@@ -1,6 +1,7 @@
 package fr.isen.AdrienMARTIN.androiderestaurant
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -45,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import coil.compose.rememberImagePainter
 import com.google.gson.Gson
 import fr.isen.AdrienMARTIN.androiderestaurant.model.Ingredients
@@ -73,14 +75,27 @@ class DetailsActivity : ComponentActivity() {
                     val total = price?.times(quantity.intValue)
 
 //
-                    scaffold(item, quantity, total, context = this@DetailsActivity)
+                    scaffold(item, quantity, total, context = this@DetailsActivity,  startActivity = { item -> startActivity(item) })
+
 
                 }
             }
         }
     }
-}
 
+}
+//fun startActivity2(flag : Int){
+//
+//    // version ultra scotch mais j'ai d'autre projet plus urgent mdrrrr et ca fonctionne just fine
+//    val activity = when (flag) {
+//        1 -> DetailsActivity::class.java
+//        2 -> HomeActivity::class.java
+//        3 -> PanierActivity::class.java
+//        else -> DetailsActivity::class.java
+//    }
+//    val intent = Intent(this, activity)
+//    startActivity(intent)
+//}
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class,
@@ -91,7 +106,9 @@ fun scaffold(
     dish: Items,
     quantity: MutableState<Int>,
     total: Float?,
-    context: Context
+    context: Context,
+    startActivity: (Intent) -> Unit,
+
 ) {
     Scaffold(
         topBar = {
@@ -114,22 +131,7 @@ fun scaffold(
                             fontStyle = FontStyle.Italic,
                         )
                         Box {
-//                            Text(
-//                                text = "0",
-//                                fontSize = 20.sp,
-//                                fontStyle = FontStyle.Italic,
-//                                modifier = Modifier
-//                                    .padding(16.dp)
-//                                    .clickable(
-//                                        onClick = {
-//                                            val panier = loadPanier(context)
-//                                            Log.d(
-//                                                "FILE",
-//                                                "panier updated: ${panier.size} ${panier[0].items.nameFr} ${panier[0].count} ${panier[0].totalPrice}"
-//                                            )
-//                                        }
-//                                    )
-//                            )
+
 
                             Image(
                                 painter = painterResource(id = R.drawable.cart),
@@ -137,10 +139,16 @@ fun scaffold(
                                 modifier = Modifier
                                     .padding(16.dp)
                                     .size(50.dp)
+                                    .clickable(
+                                        onClick = {
+                                            startActivity(Intent(context, PanierActivity::class.java))
+                                        }
+                                    )
 
                             )
-                            val panier = loadPanier(context)
-                            if (panier.size > 0) {
+                            val cartCount = PreferenceManager.getCartCount(context)
+                            PreferenceManager.setCartCount(context, 0)
+                            if (cartCount > 0) {
                                 Box(modifier =Modifier
                                     .background(color = Color(0xFFff4700), shape = CircleShape)
                                     ,
@@ -150,7 +158,7 @@ fun scaffold(
                                 )
                                 {
                                 Text(
-                                    text = panier.size.toString(),
+                                    text = cartCount.toString(),
                                     fontSize = 20.sp,
                                     fontStyle = FontStyle.Italic,
                                     modifier = Modifier
@@ -194,7 +202,7 @@ fun scaffold(
                     }
                 )
 
-                priceBouton(total, dish, quantity.value, context)
+                priceBouton(total, dish, quantity.value, context, startActivity = { dish -> startActivity(dish) })
             }
 
 
@@ -302,7 +310,7 @@ fun selector(quantity: Int, onQuantityChange: (Int) -> Unit) {
 
 
 @Composable
-fun priceBouton(total: Float?, item: Items, quantity: Int, context: Context) {
+fun priceBouton(total: Float?, item: Items, quantity: Int, context: Context, startActivity: (Intent) -> Unit){
     val snackbarVisibleState: MutableState<Boolean> = remember { mutableStateOf(false) }
 
 
@@ -322,18 +330,18 @@ fun priceBouton(total: Float?, item: Items, quantity: Int, context: Context) {
                 .clickable(
                     onClick = {
                         Log.d("FILE", "clicked")
-                        // on recup l'item et la quantité et on les envois dans le panier
-                        // on veut aussi mettre une snackbar
                         snackbarVisibleState.value = true
 
-
+                        val newCartCount = PreferenceManager.getCartCount(context) + quantity
+                        PreferenceManager.setCartCount(context, newCartCount)
                         addPanier(item, quantity.toFloat(), total, context)
 
-                        val panier = loadPanier(context)
-                        Log.d(
-                            "FILE",
-                            "panier updated: ${panier.size} ${panier[0].items.nameFr} ${panier[0].count} ${panier[0].totalPrice}"
-                        )
+
+//                        val panier = loadPanier(context)
+//                        Log.d(
+//                            "FILE",
+//                            "panier updated: ${panier.size} ${panier[0].items.nameFr} ${panier[0].count} ${panier[0].totalPrice}"
+//                        )
 
 
                     }
@@ -348,18 +356,40 @@ fun priceBouton(total: Float?, item: Items, quantity: Int, context: Context) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(32.dp)
+                .fillMaxWidth(),
             contentAlignment = Alignment.BottomCenter
         ) {
             Snackbar(
                 modifier = Modifier
-                    .padding(8.dp)
+                    .padding(16.dp)
                     .background(color = Color(0xFF0000)),
 
                 action = {
-                    TextButton(onClick = { snackbarVisibleState.value = false }) {
-                        Text("OK")
+                    Column {
+                        Text(
+                            text = "Panier",
+                            modifier = Modifier.clickable {
+                                snackbarVisibleState.value = false
+                                startActivity(Intent(context, PanierActivity::class.java))
+                            }
+                        )
+
+                        Text(
+                            text = "continu shopping",
+                            modifier = Modifier.clickable {
+                                snackbarVisibleState.value = false
+                                startActivity(Intent(context, HomeActivity::class.java))
+                            }
+                        )
+
                     }
+
+//                    TextButton(onClick = { snackbarVisibleState.value = false }) {
+//                        Text("Panier")
+////                        startActivity(Intent(context, PanierActivity::class.java))
+//
+//                    }
                 },
                 content = {
                     Log.d("snack", "priceBouton: coucou ")
@@ -372,14 +402,35 @@ fun priceBouton(total: Float?, item: Items, quantity: Int, context: Context) {
 
     }
 }
+object PreferenceManager {
+    private const val PREF_NAME = "resto_pref"
+    private const val KEY_CART_COUNT = "CART_COUNT"
 
+    fun getCartCount(context: Context): Int {
+        val sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return sharedPreferences.getInt(KEY_CART_COUNT, 0) // 0 est la valeur par défaut si la clé n'existe pas
+    }
+
+    fun setCartCount(context: Context, count: Int) {
+        val sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        sharedPreferences.edit().putInt(KEY_CART_COUNT, count).apply()
+    }
+}
 
 fun addPanier(item: Items, count: Float?, total: Float?, context: Context) {
 
     val panier = loadPanier(context)
 
     val itemToAdd = PanierItem(item, count?.toInt() ?: 0, total ?: 0f)
-    panier.add(itemToAdd)
+    val existingItem = panier.find { it.items.id == item.id }
+    if (existingItem != null) {
+        existingItem.count += count?.toInt() ?: 0
+        existingItem.totalPrice += total ?: 0f
+    } else {
+        panier.add(itemToAdd)
+    }
+
+
     Log.d("FILE", "addPanier new panier:$panier ")
 
     savePanier(panier, context)
