@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Raccoon café</string>
+    <string name="home_welcom">Bienvenue \n chez</string>
+    <string name="title_activity_entrees">EntreesActivity</string>
+    <string-array name="dishes">
+        <item>Pizza</item>
+        <item>Burger</item>
+        <item>Pasta</item>
+    </string-array>
+    <string name="title_activity_details">DetailsActivity</string>
+    <string name="title_activity_panier">PanierActivity</string>
+    <string name="title_activity_order">OrderActivity</string>
+</resources>
